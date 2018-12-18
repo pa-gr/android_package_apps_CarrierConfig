@@ -5,11 +5,8 @@ import android.os.Build;
 import android.os.PersistableBundle;
 import android.service.carrier.CarrierIdentifier;
 import android.service.carrier.CarrierService;
-<<<<<<< HEAD
 import android.telephony.CarrierConfigManager;
-=======
 import android.telephony.TelephonyManager;
->>>>>>> de649142d21189ee03d4b5198038e290c01a3024
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -73,11 +70,7 @@ public class DefaultCarrierConfigService extends CarrierService {
             return null;
         }
 
-<<<<<<< HEAD
-        PersistableBundle config = null;
-=======
         PersistableBundle config = new PersistableBundle();
->>>>>>> de649142d21189ee03d4b5198038e290c01a3024
         try {
             synchronized (this) {
                 if (mFactory == null) {
@@ -265,17 +258,15 @@ public class DefaultCarrierConfigService extends CarrierService {
                 case "device":
                     result = result && value.equalsIgnoreCase(Build.DEVICE);
                     break;
-<<<<<<< HEAD
                 case "iccid":
                     result = result && matchOnIccid(value, id);
-=======
+                    break;
                 case "cid":
                     result = result && (value.equals(id.getCarrierId())
                             || value.equals(id.getPreciseCarrierId()));
                     break;
                 case "name":
                     // name is used together with cid for readability. ignore for filter.
->>>>>>> de649142d21189ee03d4b5198038e290c01a3024
                     break;
                 default:
                     Log.e(TAG, "Unknown attribute " + attribute + "=" + value);
