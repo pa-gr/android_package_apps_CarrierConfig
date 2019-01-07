@@ -1,5 +1,6 @@
 package com.android.carrierconfig;
 
+import android.Manifest;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -251,13 +252,26 @@ public class CarrierConfigTest extends InstrumentationTestCase {
      * Get the set of config variable names, as used in XML files.
      */
     private Set<String> getCarrierConfigXmlNames() {
-        // get values of all KEY_ members of CarrierConfigManager
-        Field[] fields = CarrierConfigManager.class.getDeclaredFields();
+        Set<String> names = new HashSet<>();
+        // get values of all KEY_ members of CarrierConfigManager as well as its nested classes.
+        names.addAll(getCarrierConfigXmlNames(CarrierConfigManager.class));
+        for (Class nested : CarrierConfigManager.class.getDeclaredClasses()) {
+            Log.i("CarrierConfigTest", nested.toString());
+            if (Modifier.isStatic(nested.getModifiers())) {
+                names.addAll(getCarrierConfigXmlNames(nested));
+            }
+        }
+        return names;
+    }
+
+    private Set<String> getCarrierConfigXmlNames(Class clazz) {
+        // get values of all KEY_ members of clazz
+        Field[] fields = clazz.getDeclaredFields();
         HashSet<String> varXmlNames = new HashSet<>();
         for (Field f : fields) {
             if (!f.getName().startsWith("KEY_")) continue;
-            if ((f.getModifiers() & Modifier.STATIC) == 0) {
-                fail("non-static key in CarrierConfigManager: " + f.toString());
+            if (!Modifier.isStatic(f.getModifiers())) {
+                fail("non-static key in " + clazz.getName() + ":" + f.toString());
             }
             try {
                 String value = (String) f.get(null);
@@ -271,10 +285,12 @@ public class CarrierConfigTest extends InstrumentationTestCase {
         return varXmlNames;
     }
 
-    // static helper function to get carrier id from carrierIdentifier
-    private static int getCarrierId(@NonNull Context context,
-                                    @NonNull CarrierIdentifier carrierIdentifier) {
+    // helper function to get carrier id from carrierIdentifier
+    private int getCarrierId(@NonNull Context context,
+                             @NonNull CarrierIdentifier carrierIdentifier) {
         try {
+            getInstrumentation().getUiAutomation().adoptShellPermissionIdentity(
+                    Manifest.permission.READ_PRIVILEGED_PHONE_STATE);
             List<String> args = new ArrayList<>();
             args.add(carrierIdentifier.getMcc() + carrierIdentifier.getMnc());
             if (carrierIdentifier.getGid1() != null) {
@@ -289,7 +305,7 @@ public class CarrierConfigTest extends InstrumentationTestCase {
             if (carrierIdentifier.getSpn() != null) {
                 args.add(carrierIdentifier.getSpn());
             }
-            Cursor cursor = context.getContentResolver().query(
+            try (Cursor cursor = context.getContentResolver().query(
                     Telephony.CarrierId.All.CONTENT_URI,
                     /* projection */ null,
                     /* selection */ Telephony.CarrierId.All.MCCMNC + "=? AND "
@@ -301,21 +317,17 @@ public class CarrierConfigTest extends InstrumentationTestCase {
                             + ((carrierIdentifier.getImsi() == null) ? " is NULL" : "=?") + " AND "
                             + Telephony.CarrierId.All.SPN
                             + ((carrierIdentifier.getSpn() == null) ? " is NULL" : "=?"),
-                    /* selectionArgs */ args.toArray(new String[args.size()]),
-                    null);
-            try {
+                /* selectionArgs */ args.toArray(new String[args.size()]), null)) {
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         return cursor.getInt(cursor.getColumnIndex(Telephony.CarrierId.CARRIER_ID));
                     }
                 }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
             }
-        } catch (Exception ex) {
-            Log.e(TAG,"[getCarrierId]- ex: " + ex);
+        } catch (SecurityException e) {
+            fail("Should be able to access APIs protected by a permission apps cannot get");
+        } finally {
+            getInstrumentation().getUiAutomation().dropShellPermissionIdentity();
         }
         return TelephonyManager.UNKNOWN_CARRIER_ID;
     }
