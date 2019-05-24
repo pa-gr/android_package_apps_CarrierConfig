@@ -8,6 +8,7 @@
     <boolean name="enableSMSDeliveryReports" value="false"/>
     <boolean name="rtt_supported_bool" value="true"/>
     <boolean name="support_pause_ims_video_calls_bool" value="false"/>
+    <boolean name="carrier_disable_etws_cmas_dup_detection" value="true" />
     <int name="maxImageHeight" value="1944"/>
     <int name="maxImageWidth" value="2592"/>
     <int name="maxMessageSize" value="1048576"/>
