@@ -36,7 +36,7 @@
     <boolean name="gps.persist_lpp_mode_bool" value="true"/>
     <boolean name="prefer_2g_bool" value="false"/>
     <boolean name="rtt_supported_bool" value="true"/>
-    <boolean name="rtt_always_enabled_bool" value="true"/>
+    <boolean name="ignore_rtt_mode_setting_bool" value="true"/>
     <boolean name="show_apn_setting_cdma_bool" value="true"/>
     <boolean name="use_rcs_presence_bool" value="true"/>
     <boolean name="sms_requires_destination_number_conversion_bool" value="true"/>
